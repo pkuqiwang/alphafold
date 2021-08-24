@@ -69,7 +69,7 @@ mkdir -p /data/input
 git clone https://github.com/deepmind/alphafold.git
 ```
 
-5. AlphaFold needs multiple genetic (sequence) databases to run. We will download them using the provided script. 
+5. AlphaFold needs multiple genetic (sequence) database and model parameters.Download them using the provided script. 
 
 ``` 
 nohup /data/alphafold/scripts/download_all_data.sh /data/af_download_data &
@@ -189,3 +189,50 @@ python ~/tools/GPUCloudWatchMonitor/gpumon.py &
 ```
 nohup python3 /data/alphafold/docker/run_docker.py --fasta_paths=/data/input/T1050.fasta --max_template_date=2020-05-14 &
 ```
+
+2. Use `docker ps` to monitor the container process
+```
+docker ps
+```
+
+```
+tail -F /data/nohup.out
+```
+
+3. once the prediction finished, you should see the following in the output folder
+```
+<target_name>/
+    features.pkl
+    ranked_{0,1,2,3,4}.pdb
+    ranking_debug.json
+    relaxed_model_{1,2,3,4,5}.pdb
+    result_model_{1,2,3,4,5}.pkl
+    timings.json
+    unrelaxed_model_{1,2,3,4,5}.pdb
+    msas/
+        bfd_uniclust_hits.a3m
+        mgnify_hits.sto
+        pdb70_hits.hhr
+        uniref90_hits.sto
+```
+
+4. Copy the output folder to your local directory. You need to change owner of the output folder so it would allow you to copy them. 
+```
+sudo chown ubuntu:ubuntu /data/output/alphafold/ -R
+```
+
+Download the output from the prediction.
+```
+scp -i <ec2-key>.pem -r ubuntu@<ec2-ip>:/data/output/alphafold/T1050 ~/Downloads/
+```
+
+5. Use this [viewer](https://www.ncbi.nlm.nih.gov/Structure/icn3d/full.html) to view the predicted 3D strcuture from your result folder. We are going to pick `ranked_0.pdb` which contain the prediction with the highest confidence.
+
+<img src="https://raw.githubusercontent.com/pkuqiwang/alphafold/main/images/pdbviewer.png">
+
+Below is the 3D view of the predicted structure by AlphaFold.
+
+<img src="https://raw.githubusercontent.com/pkuqiwang/alphafold/main/images/rank0.png">
+
+
+
