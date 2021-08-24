@@ -1,4 +1,4 @@
-# Run AlphaFolder on AWS Deep Learning EC2
+# Run AlphaFold on AWS Deep Learning EC2
 
 ## Launch AWS Deep Learning EC2 Instance
 
