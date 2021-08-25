@@ -1,26 +1,26 @@
 # Run AlphaFold on AWS Deep Learning EC2
 
-After the publication of the [Nature Article](https://www.nature.com/articles/s41586-021-03819-2) and open source of open source of [AlphaFold](https://deepmind.com/research/case-studies/alphafold) on [github](https://github.com/deepmind/alphafold), there has been tremendous interest in the scientific community to try AlphaFold out first hand. With the easy access to compute resources on AWS with NVidia GPU, it is one of easiest and fastest ways to get AlphaFold running and try things out yourself.
+After the publication of the [Nature Article](https://www.nature.com/articles/s41586-021-03819-2) and open source of [AlphaFold](https://deepmind.com/research/case-studies/alphafold) on [github](https://github.com/deepmind/alphafold), there has been tremendous interest in the scientific community to try AlphaFold out first hand. With the easy access to compute resources on AWS with NVidia GPUs, it is one of easiest and fastest ways to get AlphaFold running and try things out yourself.
 
-In this step-by-step instruction, we will show you have to install AlphaFold on an AWS Deep Learning EC2 instance with GPU and run prediction using AlphaFold with CASP14 samples. We will also show you have to create snapshot for future use to reduce the effort of setting it up again. 
+In this step-by-step instruction, we will show you have to install AlphaFold on an AWS Deep Learning EC2 instance with GPU and run predictions using AlphaFold with CASP14 samples. We will also show you have to create snapshot for future use to reduce the effort of setting it up again and save cost. 
 
-> If you are not interested in the process of setting up the EC2 environment from scratch, but would like to run AlphaFold as soon as possible. Jump to [Recreate a new Deep Learning EC2 with snapshot of data volume](#recreate-a-new-deep-learning-ec2-with-snapshot-of-data-volume) section and use the provided public snapshot to create the EC2.
+> If you are not interested in the process of setting up the EC2 environment from scratch, but would like to run AlphaFold as soon as possible. Jump to [Recreate a new Deep Learning EC2 with snapshot of data volume](#recreate-a-new-deep-learning-ec2-with-snapshot-of-data-volume) section and use the provided public snapshots to create the EC2.
 
 ## Launch AWS Deep Learning EC2 Instance
 
-In this section, we will demonstrate step by step how to set up an AWS EC2 using one of pre-built Deep Learning AMI from AWS. It has most of the AlphaFold dependencies installed already and will save lots of time.
+In this section, we will demonstrate how to set up an AWS EC2 instance using one of pre-built Deep Learning AMI (Amazon Machine Image) from AWS. It already has lots of the AlphaFold dependencies installed and will save lots of time for the setup.
 
 1. Go to [AWS EC2 console](https://console.aws.amazon.com/ec2). In the AWS region of your choice, launch a new EC2 instance with Deep Learning AMI by searching `Deep Learning AMI`. In the steps below, we will use a Deep Learning AMI based on Ubuntu 18.04.
 
 ![ec2ami](images/ec2ami.png)
 
-2. Choose p3.2xlarge with 1 GPU as the instance type.
+2. Choose **p3.2xlarge** with 1 GPU as the instance type.
 
 ![p32xlarge](images/p32xlarge.png)
 
 3. Configure the proper VPC setting based on your AWS environment requirements. 
 
-4. Set the system volume to 200GB and add one new data volume of 3TB in size.  
+4. Set the system volume to 200GB and add one new data volume of 3TB (3072GB) in size.  
 
 ![ebsvolume](images/ebsvolume.png)
 
@@ -38,21 +38,21 @@ In this section, we will demonstrate step by step how to set up an AWS EC2 using
 sudo apt update
 ```
 
-2. Mount the data volume to folder `/data`. 
+2. Mount the data volume to folder `/data`. For more details, please reference [AWS Documents](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-using-volumes.html)
 
-First find the device list on the instance
+Use the lsblk command to view your available disk devices and their mount points (if applicable) to help you determine the correct device name to use.
 ```
 lsblk
 ```
 ![lsblk](images/lsblk.png)
 
-Make sure the volume is not mounted on other device (use the device name matching what you get from `lsblk`) which should only have data in the output
+Determine whether there is a file system on the volume. New volumes are raw block devices, and you must create a file system on them before you can mount and use them. 
 ```
 sudo file -s /dev/xvdb
 ```
 ![sudofile](images/sudofile.png)
 
-Create a new file system on the device and mount the volume to `/data` folder
+The device is an empty volume, we will create a file system on the volume and mount the volume to `/data` folder.
 ```
 sudo mkfs.xfs /dev/xvdb
 sudo mkdir /data
@@ -288,15 +288,21 @@ Click **Actions** drop-down and select **Create Volume**.
 
 8. Click **Volumes** on the left and you should see the newly created data volume. Its state should be **available**. Select the volume, click **Actions** drop-down menu and click **Attach volume**. Choose the newly created EC2 and attach the volume
 
-9. SSH into the newly created EC2 and run `lsblk`, you should see the new data volume unmounted
+9. SSH into the newly created EC2 and run `lsblk`, you should see the new data volume unmounted. In this case, it is `/dev/xvdf`
 
 ![lsblk2](images/lsblk2.png)
+
+Determine whether there is a file system on the volume. The data volumes just created from snapshot has a file system on them already.
+
+```
+sudo file -s /dev/xvdf
+```
 
 10. Mount the new volume to `/data` folder
 
 ```
 sudo mkdir /data
-sudo mount /dev/xvdb /data
+sudo mount /dev/xvdf /data
 sudo chown ubuntu:ubuntu -R /data
 ```
 
