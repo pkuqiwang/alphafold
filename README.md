@@ -2,9 +2,9 @@
 
 ## Launch AWS Deep Learning EC2 Instance
 
-In this section, we will demonstrate step by step how to set up an AWS EC2 using one of pre-built Deep Learning AMI from AWS. It has most of the dependcies for AlphaFold installed on the AMI to save lots of time.
+In this section, we will demonstrate step by step how to set up an AWS EC2 using one of pre-built Deep Learning AMI from AWS. It has most of the AlphaFold dependencies installed already and will save lots of time.
 
-1. In the AWS region of you choice, launch a new EC2 instance with Deep Learning AMI by searching `Deep Learning AMI`. In the steps below, we will use a Deep Learning AMI based on Ubuntu 18.04.
+1. Go to [AWS EC2 console](https://console.aws.amazon.com/ec2). In the AWS region of your choice, launch a new EC2 instance with Deep Learning AMI by searching `Deep Learning AMI`. In the steps below, we will use a Deep Learning AMI based on Ubuntu 18.04.
 
 <img src="https://raw.githubusercontent.com/pkuqiwang/alphafold/main/images/ec2ami.png">
 
@@ -12,19 +12,21 @@ In this section, we will demonstrate step by step how to set up an AWS EC2 using
 
 <img src="https://raw.githubusercontent.com/pkuqiwang/alphafold/main/images/p32xlarge.png">
 
-3. Set the system volume to 200GB and add one new data volume of 3TB in size  
+3. Configure the proper VPC setting based on your AWS environment requirements. 
+
+4. Set the system volume to 200GB and add one new data volume of 3TB in size.  
 
 <img src="https://raw.githubusercontent.com/pkuqiwang/alphafold/main/images/ebsvolume.png">
 
-4. Make sure the security group settings allow you to access the EC2 instance and it could reach the internet to install AlphaFold and other packages. Launch the EC2.
+5. Make sure the security group settings allow you to access the EC2 instance with SSH and it could reach the internet to install AlphaFold and other packages. Launch the EC2.
 
-5. Wait for the EC2 instance to become ready and SSH to the EC2 terminal.
+6. Wait for the EC2 instance to become ready and SSH to the EC2 terminal.
 
-6. (Optional) If you have internal security controls that is required, install them now.
+6. (Optional) If you have internal security controls that are required, install them now.
 
 ## Install AlphaFold
 
-1. SSH into the EC2 terminal. first update all packages to the latest on the EC2
+1. Inside EC2 terminal. first update all packages to the latest
 
 ```
 sudo apt update
@@ -38,13 +40,13 @@ lsblk
 ```
 <img src="https://raw.githubusercontent.com/pkuqiwang/alphafold/main/images/lsblk.png">
 
-Make sure the volume is not mount on other device (use the deive name matching what you get from `lsblk`) which should only have data in the output
+Make sure the volume is not mounted on other device (use the device name matching what you get from `lsblk`) which should only have data in the output
 ```
 sudo file -s /dev/xvdb
 ```
 <img src="https://raw.githubusercontent.com/pkuqiwang/alphafold/main/images/sudofile.png">
 
-Create a new file system and mount it to `/data` folder
+Create a new file system on the device and mount the volume to `/data` folder
 ```
 sudo mkfs.xfs /dev/xvdb
 sudo mkdir /data
@@ -53,7 +55,7 @@ sudo chown ubuntu:ubuntu -R /data
 df -h /data
 ```
 
-3. Install AlphaFold dependecies and other tools 
+3. Install AlphaFold dependencies and other tools 
 
 ```
 sudo apt install aria2 rsync git vim wget tmux tree -y
@@ -69,7 +71,7 @@ mkdir -p /data/input
 git clone https://github.com/deepmind/alphafold.git
 ```
 
-5. AlphaFold needs multiple genetic (sequence) database and model parameters.Download them using the provided script. 
+5. AlphaFold needs multiple genetic (sequence) database and model parameters. Download them using the provided script. 
 
 ``` 
 nohup /data/alphafold/scripts/download_all_data.sh /data/af_download_data &
@@ -78,6 +80,7 @@ nohup /data/alphafold/scripts/download_all_data.sh /data/af_download_data &
 The whole download process could take over 10 hours, wait for it to finish ...
 
 You could use the command below to monitor the download and unzip process
+
 ```
 du -sh /data/af_download_data/*
 ```
@@ -116,7 +119,7 @@ $DOWNLOAD_DIR/                             # Total: ~ 2.2 TB (download: 438 GB)
 vim /data/alphafold/docker/run_docker.py
 ```
 
-With the folders we created in `/data` folder, the configurations will look like the following. If you have setup different folder structure in your instance, set it accordingly.
+With the folders we created, the configurations will look like the following. If you have setup different folder structure in your EC2 instance, set it accordingly.
 ```
 #### USER CONFIGURATION ####
 
@@ -139,8 +142,7 @@ sudo docker run --rm --gpus all nvidia/cuda:11.0-base nvidia-smi
 ```
 <img src="https://raw.githubusercontent.com/pkuqiwang/alphafold/main/images/nvidia.png">
 
-
-8. Build AlphaFold docker image, make sure local path is `/data/alphafold` as there is a `.dockerignore` under that folder. You should see the new docker image after build.
+8. Build AlphaFold docker image. Make sure local path is `/data/alphafold` as there is a `.dockerignore` file under that folder. You should see the new docker image after build.
 
 ```
 cd /data/alphafold
@@ -158,16 +160,15 @@ pip3 install -r /data/alphafold/docker/requirements.txt
 
 <img src="https://raw.githubusercontent.com/pkuqiwang/alphafold/main/images/casp14.png">
 
-Copy it into new `.fasta` files in `/data/input` folder and save it.
+Copy it into new `.fasta` files and save it under `/data/input` folder.
 
 <img src="https://raw.githubusercontent.com/pkuqiwang/alphafold/main/images/fasta.png">
 
 You can create a few more input `.fasta` files for testing.
 
-
 ## (Optional) Install CloudWatch monitoring for GPU
 
-1. Create EC2 role and attach to EC2
+1. Create EC2 role for CloudWatch and attach to EC2 instance.
 
 2. Change the region in gpumon.py if your instance is NOT in us-east-1. Provide a new Namespace like `AlphaFold`
 
@@ -216,23 +217,102 @@ tail -F /data/nohup.out
         uniref90_hits.sto
 ```
 
-4. Copy the output folder to your local directory. You need to change owner of the output folder so it would allow you to copy them. 
+4. Copy the output folder to your local directory. 
+
+You need to change owner of the output folder first so you could copy them. 
 ```
 sudo chown ubuntu:ubuntu /data/output/alphafold/ -R
 ```
 
-Download the output from the prediction.
+Download the output from the prediction output folder to local machine.
 ```
-scp -i <ec2-key>.pem -r ubuntu@<ec2-ip>:/data/output/alphafold/T1050 ~/Downloads/
+scp -i <ec2-key-path>.pem -r ubuntu@<ec2-ip>:/data/output/alphafold/T1050 ~/Downloads/
 ```
 
-5. Use this [viewer](https://www.ncbi.nlm.nih.gov/Structure/icn3d/full.html) to view the predicted 3D strcuture from your result folder. We are going to pick `ranked_0.pdb` which contain the prediction with the highest confidence.
+5. Use this [viewer](https://www.ncbi.nlm.nih.gov/Structure/icn3d/full.html) from NIH to view the predicted 3D strcuture from your result folder. We are going to pick `ranked_0.pdb` which contain the prediction with the highest confidence.
 
 <img src="https://raw.githubusercontent.com/pkuqiwang/alphafold/main/images/pdbviewer.png">
 
-Below is the 3D view of the predicted structure by AlphaFold.
+Below is the 3D view of the predicted structure for T1050 by AlphaFold.
 
 <img src="https://raw.githubusercontent.com/pkuqiwang/alphafold/main/images/rank0.png">
 
+## Create snapshot of data volume
 
+We spent a lot of time to create an EC2 instance with working version of AlphaFold. However the P3 instance and the EBS volume are pretty expensive if we keep them running all the time. We want to have an instance ready quickly but also don't want to spend time we spent building up the environment everytime we need it. An EBS snapshot will help us to save a lot of time.
+
+Go to [AWS EC2 console](https://console.aws.amazon.com/ec2) and click **Volumes** on the left. Filter by the EC2 instance id and there should be 2 volumes. Select the data volume with 3TB in size. Click **Action** drop-down and click **Create snapshot**  
+
+<img src="https://raw.githubusercontent.com/pkuqiwang/alphafold/main/images/snapshot.png">
+
+The snapshot will take a few hours to finish. After the snapshot is done, you could safely shutdown your EC2.
+
+## Recreate a new Deep Learning EC2 with snapshot of data volume
+
+To recreate a new EC2 with AlphaFold, the first couple steps are similar to what we did earlier when creating a EC2 from scratch. But instead of creating the data volume from scratch, we will attach a volume restored from the snapshot created earlier.
+
+1. Go to [AWS EC2 console](https://console.aws.amazon.com/ec2). In the AWS region of your choice, launch a new EC2 instance with Deep Learning AMI by searching `Deep Learning AMI`. Choose the Deep Learning AMI based on Ubuntu 18.04.
+
+<img src="https://raw.githubusercontent.com/pkuqiwang/alphafold/main/images/ec2ami.png">
+
+2. Choose p3.2xlarge with 1 GPU as the instance type.
+
+<img src="https://raw.githubusercontent.com/pkuqiwang/alphafold/main/images/p32xlarge.png">
+
+3. Configure the proper VPC setting based on your AWS environment requirements.
+
+4. Set the system volume to 200GB. But no data volume this time.
+
+<img src="https://raw.githubusercontent.com/pkuqiwang/alphafold/main/images/ebsvolume2.png">
+
+5. Make sure the security group settings allow you to access the EC2 instance and it could reach the internet to install python and docker packages. Launch the EC2.
+
+6. Go to [AWS EC2 console](https://console.aws.amazon.com/ec2) and click **Snapshots** on the left. Select the snapshot you created earlier from the data volume. Click **Actions** drop-down and select **Create Volume**.
+
+<img src="https://raw.githubusercontent.com/pkuqiwang/alphafold/main/images/restoresnapshot.png">
+
+7. Set the new data volume setting accordingly. Make sure the **Availability Zone** is the same as the newly created EC2 instance, otherwise you will not be able to mount it to the new EC2 instance. Click **Create Volume** at the bottom to create the new data volume
+
+<img src="https://raw.githubusercontent.com/pkuqiwang/alphafold/main/images/volume_setting.png">
+
+8. Click **Volumes** on the left and you should see the newly created data volume. Its state should be **available**. Select the volume, click **Actions** drop-down menu and click **Attach volume**. Choose the newly created EC2 and attach the volume
+
+9. SSH into the newly created EC2 and run `lsblk`, you should see the new data volume unmounted
+
+<img src="https://raw.githubusercontent.com/pkuqiwang/alphafold/main/images/lsblk2.png">
+
+10. Mount the new volume to `/data` folder
+
+```
+sudo mkdir /data
+sudo mount /dev/xvdb /data
+sudo chown ubuntu:ubuntu -R /data
+```
+
+11. Update the system and install dependecies. We need to rebuild the AlphaFold docker image.
+
+```
+sudo apt update
+sudo apt install aria2 rsync git vim wget tmux tree -y
+pip3 install -r /data/alphafold/docker/requirements.txt
+
+cd /data/alphafold
+docker build -f docker/Dockerfile -t alphafold .
+docker images
+```
+
+12. Confirm the NVidia container kit is installed. You should see somthing like the screen below
+
+```
+sudo docker run --rm --gpus all nvidia/cuda:11.0-base nvidia-smi
+```
+
+13. Use the following command to run prediction of protein sequence from `/data/input/T1050.fasta`. 
+
+> Note: we use a different protein sequence as the snapshot contain the result from T1050 already. If you want to run the prediction for T1050 again, please first remove the result folder before run the new prediction.
+
+```
+cd /data
+nohup python3 /data/alphafold/docker/run_docker.py --fasta_paths=/data/input/T1024.fasta --max_template_date=2020-05-14 &
+```
 
