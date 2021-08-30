@@ -1,16 +1,16 @@
-# Run AlphaFold on AWS Deep Learning EC2
+# Running AlphaFold v2.0 on Amazon EC2
 
-After the publication of the [Nature Article](https://www.nature.com/articles/s41586-021-03819-2) and open source of [AlphaFold v2.0](https://deepmind.com/research/case-studies/alphafold) on [github](https://github.com/deepmind/alphafold), there has been tremendous interest in the scientific community to try Deepmind's AlphaFold v2.0 implementation out first hand. With the easy access to compute resources on AWS with NVidia GPUs, it is one of easiest and fastest ways to get AlphaFold v2.0 running and try things out yourself.
+After the publication of the [Nature Article](https://www.nature.com/articles/s41586-021-03819-2) and open source of [AlphaFold v2.0](https://deepmind.com/research/case-studies/alphafold) on [github](https://github.com/deepmind/alphafold) (will refer it as AlphaFold below), there has been tremendous interest in the scientific community to try Deepmind's AlphaFold implementation out first hand. With the easy access to compute resources on Amazon EC2 with NVidia GPUs, it is one of easiest and fastest ways to get AlphaFold running and try things out yourself.
 
-In this step-by-step instruction, we will show you have to install AlphaFold v2.0 on an AWS Deep Learning EC2 instance with GPU and run predictions using AlphaFold v2.0 with CASP14 samples. We will also show you have to create snapshot for future use to reduce the effort of setting it up again and save cost. 
+In this step-by-step instruction, we will show have to install AlphaFold on an Amazon EC2 instance with Deep Learning image and GPU, and run predictions using AlphaFold with CASP14 samples. We will also show how to create EBS snapshot for future use to reduce the effort of setting it up again and save costs. 
 
-> If you are not interested in the process of setting up the EC2 environment from scratch, but would like to run AlphaFold as soon as possible. Jump to [Recreate a new Deep Learning EC2 with snapshot of data volume](#recreate-a-new-deep-learning-ec2-with-snapshot-of-data-volume) section and use the provided public snapshots to create the EC2.
+> If you are not interested in the process of setting up the Amazon EC2 environment from scratch, but would like to run AlphaFold as soon as possible. Jump to [Recreate a new Deep Learning EC2 with snapshot of data volume](#recreate-a-new-deep-learning-ec2-with-snapshot-of-data-volume) section and use the provided public snapshots to create the EC2.
 
 ## Launch AWS Deep Learning EC2 Instance
 
 In this section, we will demonstrate how to set up an AWS EC2 instance using one of pre-built Deep Learning AMI (Amazon Machine Image) from AWS. It already has lots of the AlphaFold dependencies installed and will save lots of time for the setup.
 
-1. Go to [AWS EC2 console](https://console.aws.amazon.com/ec2). In the AWS region of your choice, launch a new EC2 instance with Deep Learning AMI by searching `Deep Learning AMI`. In the steps below, we will use a Deep Learning AMI based on Ubuntu 18.04.
+1. Go to [Amazon EC2 console](https://console.aws.amazon.com/ec2). In the AWS region of your choice, launch a new EC2 instance with Deep Learning AMI by searching `Deep Learning AMI`. In the steps below, we will use a Deep Learning AMI based on Ubuntu 18.04.
 
 ![ec2ami](images/ec2ami.png)
 
@@ -258,7 +258,7 @@ The snapshot will take a few hours to finish. After the snapshot is done, you co
 
 To recreate a new EC2 with AlphaFold, the first couple steps are similar to what we did earlier when creating a EC2 from scratch. But instead of creating the data volume from scratch, we will attach a volume restored from the snapshot.
 
-1. Go to [AWS EC2 console](https://console.aws.amazon.com/ec2). In the AWS region of your choice, launch a new EC2 instance with Deep Learning AMI by searching `Deep Learning AMI`. Choose the Deep Learning AMI based on Ubuntu 18.04.
+1. Go to [Amazon EC2 console](https://console.aws.amazon.com/ec2). In the AWS region of your choice, launch a new EC2 instance with Deep Learning AMI by searching `Deep Learning AMI`. Choose the Deep Learning AMI based on Ubuntu 18.04.
 
 ![ec2ami](images/ec2ami.png)
 
@@ -274,7 +274,7 @@ To recreate a new EC2 with AlphaFold, the first couple steps are similar to what
 
 5. Make sure the security group settings allow you to access the EC2 instance and it could reach the internet to install python and docker packages. Launch the EC2.
 
-6. Go to [AWS EC2 console](https://console.aws.amazon.com/ec2) and click **Snapshots** on the left. Select the snapshot you created earlier or use the public snapshot provided. 
+6. Go to [Amazon EC2 console](https://console.aws.amazon.com/ec2) and click **Snapshots** on the left. Select the snapshot you created earlier or use the public snapshot provided. 
 
 > We provide public snapshots in **us-east-1** and **us-east-2** regions. Search by **Snapshot ID**  `snap-07e090f20449b0981` in **us-east-1**, or `snap-0319fdb0334298356` in **us-east-2**.
 
