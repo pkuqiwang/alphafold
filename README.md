@@ -28,7 +28,7 @@ In this section, we will demonstrate how to set up an AWS EC2 instance using one
 
 6. Wait for the EC2 instance to become ready and SSH to the EC2 terminal.
 
-6. (Optional) If you have internal security controls that are required, install them now.
+7. (Optional) If you have internal security controls that are required, install them now.
 
 ## Install AlphaFold
 
@@ -145,8 +145,7 @@ output_dir = '/data/output/alphafold'
 ```
 sudo docker run --rm --gpus all nvidia/cuda:11.0-base nvidia-smi
 ```
-![](images/.png)
-<img src="https://raw.githubusercontent.com/pkuqiwang/alphafold/main/images/nvidia.png">
+![nvidia](images/nvidia.png)
 
 8. Build AlphaFold docker image. Make sure local path is `/data/alphafold` as there is a `.dockerignore` file under that folder. You should see the new docker image after build.
 
